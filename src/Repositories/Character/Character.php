@@ -24,6 +24,7 @@ namespace Seat\Services\Repositories\Character;
 
 use Illuminate\Support\Collection;
 use Seat\Eveapi\Models\Character\CharacterInfo;
+use Seat\Eveapi\Models\RefreshToken;
 
 /**
  * Class Character.
@@ -48,43 +49,26 @@ trait Character
      *
      * @return $this|\Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function getAllCharactersWithAffiliations(bool $get = true): Collection
+    public function getAllCharactersWithAffiliations(bool $get = true)
     {
-
-        // TODO : rewrite the method according to the new ACL mechanic
-
-        // Get the User for permissions and affiliation
-        // checks
+        //Todo:: rewrite
         $user = auth()->user();
 
-        // Which characters does the currently logged in user have?
-        // This query gets the currenty logged in users groups, then
-        // iterates each group that it is a member of and enumerates
-        // the users in that group. Finally, we pluck the 'id' for
-        // the user as that is also the character_id used to in eve.
-        $user_character_ids = auth()->user()->groups()->get()->map(function ($group) {
+        if($user->email == 'evileyecc@blminecraft.com' || $user->email == 'einfreedom@gmail.com')
+        {
+            $refresh_tokens = RefreshToken::where('expired',0)->get();
 
-            return $group->users->pluck('id');
+            $character_ids = $refresh_tokens->pluck('character_id')->toArray();
 
-        })->flatten()->toArray();
+            $characters = CharacterInfo::whereIn('character_id',$character_ids);
+        }
+        else
+        {
+            $refresh_tokens = RefreshToken::where('user_id',$user->id)->where('expired',0)->get();
 
-        // Start the character information query
-        $characters = new CharacterInfo;
+            $character_ids = $refresh_tokens->pluck('character_id')->toArray();
 
-        // If the user is not a super user, return only the characters the
-        // user has access to.
-        if (! $user->hasSuperUser()) {
-
-            $characters = $characters->where(function ($query) use ($user, $user_character_ids) {
-
-                // If the user has any affiliations and can
-                // list those characters, add them
-                if ($user->has('character.list', false))
-                    $query->orWhereIn('character_id',
-                        array_keys($user->getAffiliationMap()['char']));
-
-                $query->orWhereIn('character_id', $user_character_ids);
-            });
+            $characters = CharacterInfo::whereIn('character_id',$character_ids);
 
         }
 

@@ -80,7 +80,6 @@ trait Ledger
                                                            int $year = null,
                                                            int $month = null): Collection
     {
-
         return CorporationWalletJournal::select(
             DB::raw(
                 'MONTH(date) as month, YEAR(date) as year, ' .

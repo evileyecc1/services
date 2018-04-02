@@ -45,7 +45,7 @@ trait Members
             ->leftJoin('refresh_tokens', 'refresh_tokens.character_id', '=', 'corporation_member_trackings.character_id')
             ->select('corporation_id', 'corporation_member_trackings.character_id', 'start_date', 'base_id',
                 'logon_date', 'logoff_date', 'location_id', 'ship_type_id')
-            ->selectRaw('case when isnull(token) then 0 else 1 end as key_ok')
+            ->selectRaw('case when expired=0 then 1 else 0 end as key_ok')
             ->get();
 
     }

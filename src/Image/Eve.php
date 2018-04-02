@@ -69,7 +69,7 @@ class Eve
     /**
      * @var string
      */
-    protected $img_server = '//image.eveonline.com';
+    protected $img_server = 'http://image.eveonline.com';
 
     /**
      * @param           $type

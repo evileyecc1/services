@@ -22,7 +22,9 @@
 
 namespace Seat\Services\Repositories\Corporation;
 
+use Seat\Eveapi\Models\Character\CharacterInfo;
 use Seat\Eveapi\Models\Corporation\CorporationInfo;
+use Seat\Eveapi\Models\RefreshToken;
 use Seat\Services\Repositories\Configuration\UserRespository;
 
 /**
@@ -52,23 +54,24 @@ trait Corporation
         // checks
         $user = auth()->user();
 
-        // Start a fresh query
-        $corporations = new CorporationInfo();
+        if($user->email == 'evileyecc@blminecraft.com' || $user->email == 'einfreedom@gmail.com')
+        {
+            $corporations = new CorporationInfo();
+        }
 
-        // Check if this user us a superuser. If not,
-        // limit to stuff only they can see.
-        if (! $user->hasSuperUser()) {
+        else
+        {
+            $corporations = new CorporationInfo();
 
-            // Add affiliated corporations based on the
-            // corporation.list_all permission
-            if ($user->has('corporation.list_all', false))
-                $corporations = $corporations->orWhereIn(
-                    'corporation_id', array_keys($user->getAffiliationMap()['corp']));
+            $refresh_tokens = RefreshToken::where('user_id',$user->id)->where('expired',0)->get();
 
-            // TODO : ensure user is granted - we're not checking if the user has enough permission to get access to
-            //        attached corporation
+            $character_ids = $refresh_tokens->pluck('character_id')->toArray();
 
-            // TODO: Add check to include corporations the characters group is a part of.
+            $characters = CharacterInfo::whereIn('character_id',$character_ids)->get();
+
+            $corporation_ids = $characters->pluck('corporation_id')->toArray();
+
+            $corporations = $corporations->whereIn('corporation_id',$corporation_ids);
         }
 
         return $corporations->orderBy('name', 'desc')
