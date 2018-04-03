@@ -77,8 +77,8 @@ trait Ledger
      * @return \Illuminate\Support\Collection
      */
     public function getCorporationLedgerBountyPrizeByMonth(int $corporation_id,
-                                                           int $year = null,
-                                                           int $month = null): Collection
+                                                           $year = null,
+                                                           $month = null): Collection
     {
         return CorporationWalletJournal::select(
             DB::raw(
